@@ -17,6 +17,10 @@
         }
         th {
             background-color: #f2f2f2;
+            cursor: pointer;
+        }
+        th:hover {
+            background-color: #ddd;
         }
         tr:nth-child(even) {
             background-color: #f9f9f9;
@@ -25,20 +29,45 @@
             max-width: 100px;
             height: auto;
         }
+        .filters {
+            margin: 20px 0;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .filters input, .filters select {
+            padding: 5px;
+            margin-right: 10px;
+        }
     </style>
 </head>
 <body>
     <h1>Annonces Immobilières</h1>
+    
+    <div class="filters">
+        <input type="text" id="villeFilter" placeholder="Filtrer par ville">
+        <select id="typeFilter">
+            <option value="">Tous les types</option>
+            <option value="MAI">Maison</option>
+            <option value="APP">Appartement</option>
+        </select>
+        <input type="number" id="prixMinFilter" placeholder="Prix minimum">
+        <input type="number" id="prixMaxFilter" placeholder="Prix maximum">
+        <input type="number" id="surfaceMinFilter" placeholder="Surface minimum">
+        <input type="number" id="surfaceMaxFilter" placeholder="Surface maximum">
+    </div>
+
     <table id="annonceTable">
         <thead>
             <tr>
                 <th>Photo</th>
-                <th>Type</th>
-                <th>Ville</th>
-                <th>Prix</th>
-                <th>Surface</th>
-                <th>Pièces</th>
+                <th data-sort="typeBien">Type</th>
+                <th data-sort="communeNom">Ville</th>
+                <th data-sort="prixAffiche">Prix</th>
+                <th data-sort="surface">Surface</th>
+                <th data-sort="nbPieces">Pièces</th>
                 <th>Description</th>
+                <th>Détails</th>
             </tr>
         </thead>
         <tbody id="tableBody">
@@ -46,32 +75,130 @@
     </table>
 
     <script>
+        let annoncesData = [];
+        let sortDirection = 1;
+        let currentSortColumn = '';
+
         fetch('data.json')
             .then(response => response.json())
             .then(data => {
-                const tableBody = document.getElementById('tableBody');
-                
-                data.annonceResumeDto.forEach(annonce => {
-                    const row = document.createElement('tr');
-                    
-                    row.innerHTML = `
-                        <td><img src="${annonce.urlPhotoPrincipale}" alt="Photo du bien"></td>
-                        <td>${annonce.typeBien === 'MAI' ? 'Maison' : 
-                            annonce.typeBien === 'APP' ? 'Appartement' : annonce.typeBien}</td>
-                        <td>${annonce.communeNom}</td>
-                        <td>${new Intl.NumberFormat('fr-FR', {
-                            style: 'currency',
-                            currency: 'EUR'
-                        }).format(annonce.prixAffiche)}</td>
-                        <td>${annonce.surface} m²</td>
-                        <td>${annonce.nbPieces} pièces</td>
-                        <td>${annonce.descriptionFr?.substring(0, 100)}...</td>
-                    `;
-                    
-                    tableBody.appendChild(row);
-                });
+                annoncesData = data.annonceResumeDto;
+                renderTable(annoncesData);
+                setupEventListeners();
             })
             .catch(error => console.error('Error:', error));
+
+        function renderTable(data) {
+            const tableBody = document.getElementById('tableBody');
+            tableBody.innerHTML = '';
+            
+            data.forEach(annonce => {
+                const row = document.createElement('tr');
+                
+                row.innerHTML = `
+                    <td><img src="${annonce.urlPhotoPrincipale}" alt="Photo du bien"></td>
+                    <td>${annonce.typeBien === 'MAI' ? 'Maison' : 
+                        annonce.typeBien === 'APP' ? 'Appartement' : annonce.typeBien}</td>
+                    <td>${annonce.communeNom}</td>
+                    <td>${new Intl.NumberFormat('fr-FR', {
+                        style: 'currency',
+                        currency: 'EUR'
+                    }).format(annonce.prixAffiche)}</td>
+                    <td>${annonce.surface} m²</td>
+                    <td>${annonce.nbPieces} pièces</td>
+                    <td>${annonce.descriptionFr?.substring(0, 100)}...</td>
+                    <td><a href="${annonce.urlDetailAnnonceFr}" target="_blank">Lien</a></td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+        }
+
+        function setupEventListeners() {
+            // Sorting
+            document.querySelectorAll('th[data-sort]').forEach(th => {
+                th.addEventListener('click', () => {
+                    const column = th.dataset.sort;
+                    if (currentSortColumn === column) {
+                        sortDirection *= -1;
+                    } else {
+                        currentSortColumn = column;
+                        sortDirection = 1;
+                    }
+                    
+                    const sortedData = [...annoncesData].sort((a, b) => {
+                        return sortDirection * (a[column] - b[column] || 
+                               String(a[column]).localeCompare(String(b[column])));
+                    });
+                    
+                    renderTable(sortedData);
+                });
+            });
+
+            // Filtering
+            const filters = {
+                ville: document.getElementById('villeFilter'),
+                type: document.getElementById('typeFilter'),
+                prixMin: document.getElementById('prixMinFilter'),
+                prixMax: document.getElementById('prixMaxFilter'),
+                surfaceMin: document.getElementById('surfaceMinFilter'),
+                surfaceMax: document.getElementById('surfaceMaxFilter')
+            };
+
+            Object.values(filters).forEach(filter => {
+                filter.addEventListener('input', applyFilters);
+            });
+        }
+
+        function applyFilters() {
+            let filteredData = [...annoncesData];
+
+            // Ville filter
+            const villeFilter = document.getElementById('villeFilter').value.toLowerCase();
+            if (villeFilter) {
+                filteredData = filteredData.filter(annonce => 
+                    annonce.communeNom.toLowerCase().includes(villeFilter)
+                );
+            }
+
+            // Type filter
+            const typeFilter = document.getElementById('typeFilter').value;
+            if (typeFilter) {
+                filteredData = filteredData.filter(annonce => 
+                    annonce.typeBien === typeFilter
+                );
+            }
+
+            // Prix filters
+            const prixMin = document.getElementById('prixMinFilter').value;
+            const prixMax = document.getElementById('prixMaxFilter').value;
+            if (prixMin) {
+                filteredData = filteredData.filter(annonce => 
+                    annonce.prixAffiche >= parseFloat(prixMin)
+                );
+            }
+            if (prixMax) {
+                filteredData = filteredData.filter(annonce => 
+                    annonce.prixAffiche <= parseFloat(prixMax)
+                );
+            }
+
+            // Surface filters
+            const surfaceMin = document.getElementById('surfaceMinFilter').value;
+            const surfaceMax = document.getElementById('surfaceMaxFilter').value;
+            if (surfaceMin) {
+                filteredData = filteredData.filter(annonce => 
+                    annonce.surface >= parseFloat(surfaceMin)
+                );
+            }
+            if (surfaceMax) {
+                filteredData = filteredData.filter(annonce => 
+                    annonce.surface <= parseFloat(surfaceMax)
+                );
+            }
+
+            renderTable(filteredData);
+        }
     </script>
 </body>
 </html>
