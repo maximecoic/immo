@@ -64,8 +64,17 @@
                 const row = document.createElement('tr');
                 const prixM2 = annonce.surface ? Math.round(annonce.prixAffiche / annonce.surface) : 'N/A';
                 
-                // Update click event
-                row.onclick = () => openDetailPanel(annonce.urlDetailAnnonceFr, annonce);
+                // Update click event with Arc browser detection
+                row.onclick = () => {
+                    const isArcBrowser = navigator.userAgent.includes('Arc/');
+                    if (isArcBrowser) {
+                        // Open in split view for Arc browser
+                        window.open(annonce.urlDetailAnnonceFr, '_blank', 'split');
+                    } else {
+                        // Open in new tab for other browsers
+                        window.open(annonce.urlDetailAnnonceFr, '_blank');
+                    }
+                };
                 
                 row.innerHTML = `
                     <td>${annonce.typeBien === 'MAI' ? 'Maison' : 
