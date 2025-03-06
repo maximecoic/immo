@@ -42,7 +42,6 @@ tr:not(thead tr):hover {
     display: grid;
     grid-template-columns: repeat(2, 200px);
     gap: 10px;
-    height: 300px;
     align-content: space-between;
     padding: 10px 0;
     box-sizing: border-box;
