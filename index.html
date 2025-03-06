@@ -72,6 +72,7 @@
             
             data.forEach(annonce => {
                 const row = document.createElement('tr');
+                row.setAttribute('data-id', annonce.id);
                 const prixM2 = annonce.surface ? Math.round(annonce.prixAffiche / annonce.surface) : 'N/A';
                 
                 // Update click event with Arc browser detection
@@ -473,6 +474,22 @@
                                     maximumFractionDigits: 0
                                 }).format(avgPrice)}
                             `);
+
+                            // Add hover events
+                            marker.on('mouseover', () => {
+                                // Highlight corresponding table rows
+                                items.forEach(item => {
+                                    const row = document.querySelector(`tr[data-id="${item.id}"]`);
+                                    if (row) row.classList.add('highlighted');
+                                });
+                            });
+
+                            marker.on('mouseout', () => {
+                                // Remove highlight from all rows
+                                document.querySelectorAll('tr.highlighted').forEach(row => {
+                                    row.classList.remove('highlighted');
+                                });
+                            });
                         }
                     });
             });
