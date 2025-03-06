@@ -22,6 +22,8 @@
         <input type="text" id="prixMaxFilter" placeholder="Prix maximum">
         <input type="text" id="surfaceMinFilter" placeholder="Surface minimum">
         <input type="text" id="surfaceMaxFilter" placeholder="Surface maximum">
+        <input type="text" id="terrainMinFilter" placeholder="Terrain minimum">
+        <input type="text" id="terrainMaxFilter" placeholder="Terrain maximum">
     </div>
 
     <table id="annonceTable">
@@ -31,6 +33,7 @@
                 <th data-sort="communeNom">Ville</th>
                 <th data-sort="prixAffiche">Prix</th>
                 <th data-sort="surface">Surface</th>
+                <th data-sort="surfaceTerrain">Terrain</th>
                 <th data-sort="prixM2">Prix/m²</th>
                 <th data-sort="nbPieces">Pièces</th>
                 <th data-sort="dateCreation">Ancienneté</th>
@@ -104,6 +107,7 @@
                         maximumFractionDigits: 0
                     }).format(annonce.prixAffiche)}</td>
                     <td>${annonce.surface} m²</td>
+                    <td>${annonce.surfaceTerrain ? annonce.surfaceTerrain + ' m²' : 'N/A'}</td>
                     <td>${prixM2 !== 'N/A' ? new Intl.NumberFormat('fr-FR', {
                         style: 'currency',
                         currency: 'EUR',
@@ -202,11 +206,29 @@
                 prixMin: document.getElementById('prixMinFilter'),
                 prixMax: document.getElementById('prixMaxFilter'),
                 surfaceMin: document.getElementById('surfaceMinFilter'),
-                surfaceMax: document.getElementById('surfaceMaxFilter')
+                surfaceMax: document.getElementById('surfaceMaxFilter'),
+                terrainMin: document.getElementById('terrainMinFilter'),
+                terrainMax: document.getElementById('terrainMaxFilter')
             };
 
             // Add formatting for price inputs
             [filters.prixMin, filters.prixMax].forEach(input => {
+                input.addEventListener('input', (e) => {
+                    // Remove any non-digit characters
+                    let value = e.target.value.replace(/\D/g, '');
+                    
+                    // Add thousand separators
+                    if (value) {
+                        value = new Intl.NumberFormat('fr-FR').format(parseInt(value));
+                    }
+                    
+                    // Update the input value
+                    e.target.value = value;
+                });
+            });
+
+            // Add formatting for surface and terrain inputs
+            [filters.surfaceMin, filters.surfaceMax, filters.terrainMin, filters.terrainMax].forEach(input => {
                 input.addEventListener('input', (e) => {
                     // Remove any non-digit characters
                     let value = e.target.value.replace(/\D/g, '');
@@ -260,8 +282,8 @@
             }
 
             // Surface filters
-            const surfaceMin = document.getElementById('surfaceMinFilter').value;
-            const surfaceMax = document.getElementById('surfaceMaxFilter').value;
+            const surfaceMin = document.getElementById('surfaceMinFilter').value.replace(/\D/g, '');
+            const surfaceMax = document.getElementById('surfaceMaxFilter').value.replace(/\D/g, '');
             if (surfaceMin) {
                 filteredData = filteredData.filter(annonce => 
                     annonce.surface >= parseFloat(surfaceMin)
@@ -270,6 +292,20 @@
             if (surfaceMax) {
                 filteredData = filteredData.filter(annonce => 
                     annonce.surface <= parseFloat(surfaceMax)
+                );
+            }
+
+            // Terrain filters
+            const terrainMin = document.getElementById('terrainMinFilter').value.replace(/\D/g, '');
+            const terrainMax = document.getElementById('terrainMaxFilter').value.replace(/\D/g, '');
+            if (terrainMin) {
+                filteredData = filteredData.filter(annonce => 
+                    annonce.surfaceTerrain && annonce.surfaceTerrain >= parseFloat(terrainMin)
+                );
+            }
+            if (terrainMax) {
+                filteredData = filteredData.filter(annonce => 
+                    annonce.surfaceTerrain && annonce.surfaceTerrain <= parseFloat(terrainMax)
                 );
             }
 
