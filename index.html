@@ -7,23 +7,28 @@
     <link rel="icon" type="image/jpeg" href="favico.jpeg">
     <link href="https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Roboto:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
     <h1>Annonces Immobilières</h1>
     
-    <div class="filters">
-        <input type="text" id="villeFilter" placeholder="Filtrer par ville">
-        <select id="typeFilter">
-            <option value="">Tous les types</option>
-            <option value="MAI">Maison</option>
-            <option value="APP">Appartement</option>
-        </select>
-        <input type="text" id="prixMinFilter" placeholder="Prix minimum">
-        <input type="text" id="prixMaxFilter" placeholder="Prix maximum">
-        <input type="text" id="surfaceMinFilter" placeholder="Surface minimum">
-        <input type="text" id="surfaceMaxFilter" placeholder="Surface maximum">
-        <input type="text" id="terrainMinFilter" placeholder="Terrain minimum">
-        <input type="text" id="terrainMaxFilter" placeholder="Terrain maximum">
+    <div class="filters-map-container">
+        <div class="filters">
+            <input type="text" id="villeFilter" placeholder="Filtrer par ville">
+            <select id="typeFilter">
+                <option value="">Tous les types</option>
+                <option value="MAI">Maison</option>
+                <option value="APP">Appartement</option>
+            </select>
+            <input type="text" id="prixMinFilter" placeholder="Prix minimum">
+            <input type="text" id="prixMaxFilter" placeholder="Prix maximum">
+            <input type="text" id="surfaceMinFilter" placeholder="Surface minimum">
+            <input type="text" id="surfaceMaxFilter" placeholder="Surface maximum">
+            <input type="text" id="terrainMinFilter" placeholder="Terrain minimum">
+            <input type="text" id="terrainMaxFilter" placeholder="Terrain maximum">
+        </div>
+        <div id="map"></div>
     </div>
 
     <table id="annonceTable">
@@ -57,9 +62,9 @@
                 filteredData = [...annoncesData];
                 renderTable(filteredData);
                 setupEventListeners();
+                initMap(filteredData);
             })
             .catch(error => console.error('Error:', error));
-
 
         function renderTable(data) {
             const tableBody = document.getElementById('tableBody');
@@ -404,6 +409,58 @@
                 closeDetailPanel();
             }
         });
+
+        function initMap(data) {
+            const map = L.map('map').setView([47.2184, -2.3510], 8); // Center on Bretagne
+            
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors'
+            }).addTo(map);
+
+            // Group markers by postal code
+            const markersByPostalCode = {};
+            
+            data.forEach(annonce => {
+                if (!markersByPostalCode[annonce.codePostal]) {
+                    markersByPostalCode[annonce.codePostal] = {
+                        count: 0,
+                        lat: null,
+                        lng: null,
+                        items: []
+                    };
+                }
+                markersByPostalCode[annonce.codePostal].count++;
+                markersByPostalCode[annonce.codePostal].items.push(annonce);
+            });
+            
+            // Fetch coordinates for each postal code
+            Object.keys(markersByPostalCode).forEach(codePostal => {
+                fetch(`https://api-adresse.data.gouv.fr/search/?q=${codePostal}&type=municipality&limit=1`)
+                    .then(response => response.json())
+                    .then(result => {
+                        if (result.features && result.features.length > 0) {
+                            const [lng, lat] = result.features[0].geometry.coordinates;
+                            const marker = L.marker([lat, lng]).addTo(map);
+                            
+                            const count = markersByPostalCode[codePostal].count;
+                            const items = markersByPostalCode[codePostal].items;
+                            
+                            const avgPrice = Math.round(items.reduce((sum, item) => sum + item.prixAffiche, 0) / count);
+                            
+                            marker.bindPopup(`
+                                <b>${items[0].communeNom}</b><br>
+                                ${count} annonce${count > 1 ? 's' : ''}<br>
+                                Prix moyen: ${new Intl.NumberFormat('fr-FR', {
+                                    style: 'currency',
+                                    currency: 'EUR',
+                                    minimumFractionDigits: 0,
+                                    maximumFractionDigits: 0
+                                }).format(avgPrice)}
+                            `);
+                        }
+                    });
+            });
+        }
     </script>
 </body>
 </html>
