@@ -11,7 +11,10 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body>
-    <h1>Annonces Immobilières</h1>
+    <div class="header">
+        <h1>Annonces Immobilières</h1>
+        <span class="count">(<span id="rowCount">0</span> annonces)</span>
+    </div>
     
     <div class="filters-map-container">
         <div class="filters">
@@ -69,6 +72,9 @@
         function renderTable(data) {
             const tableBody = document.getElementById('tableBody');
             tableBody.innerHTML = '';
+            
+            // Update count
+            document.getElementById('rowCount').textContent = data.length;
             
             data.forEach(annonce => {
                 const row = document.createElement('tr');
