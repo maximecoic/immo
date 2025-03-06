@@ -42,6 +42,10 @@ tr:not(thead tr):hover {
     display: grid;
     grid-template-columns: repeat(2, 200px);
     gap: 10px;
+    height: 300px;
+    align-content: space-between;
+    padding: 10px 0;
+    box-sizing: border-box;
 }
 
 .filters input, 
@@ -50,6 +54,7 @@ tr:not(thead tr):hover {
     width: 100%;
     box-sizing: border-box;
     font-family: 'Google Sans', 'Roboto', sans-serif;
+    height: 32px;
 }
 
 .highlight {
