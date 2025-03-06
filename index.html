@@ -81,6 +81,26 @@
                 row.setAttribute('data-id', annonce.id);
                 const prixM2 = annonce.surface ? Math.round(annonce.prixAffiche / annonce.surface) : 'N/A';
                 
+                // Add hover events for the row
+                row.addEventListener('mouseenter', () => {
+                    // Find and highlight corresponding marker
+                    markers.forEach(marker => {
+                        const markerItems = marker.items || [];
+                        if (markerItems.some(item => item.id === annonce.id)) {
+                            marker.setIcon(greenIcon);
+                            marker.setZIndexOffset(1000); // Bring to front
+                        }
+                    });
+                });
+
+                row.addEventListener('mouseleave', () => {
+                    // Reset all markers
+                    markers.forEach(marker => {
+                        marker.setIcon(defaultIcon);
+                        marker.setZIndexOffset(0);
+                    });
+                });
+                
                 // Update click event with Arc browser detection
                 row.onclick = () => {
                     const isArcBrowser = navigator.userAgent.includes('Arc/');
@@ -420,6 +440,20 @@
 
         let map;
         let markers = [];
+        // Create default and highlighted icons
+        const defaultIcon = L.icon({
+            iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34]
+        });
+        
+        const greenIcon = L.icon({
+            iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
+            iconSize: [25, 41],
+            iconAnchor: [12, 41],
+            popupAnchor: [1, -34]
+        });
 
         function initMap(data) {
             map = L.map('map').setView([47.6586, -2.7599], 11); // Center on Vannes
@@ -461,7 +495,8 @@
                     .then(result => {
                         if (result.features && result.features.length > 0) {
                             const [lng, lat] = result.features[0].geometry.coordinates;
-                            const marker = L.marker([lat, lng]).addTo(map);
+                            const marker = L.marker([lat, lng], {icon: defaultIcon}).addTo(map);
+                            marker.items = data.items; // Store items for later reference
                             markers.push(marker);
                             
                             const count = data.count;
