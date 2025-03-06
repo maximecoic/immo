@@ -33,8 +33,6 @@
                 <th data-sort="prixM2">Prix/m²</th>
                 <th data-sort="nbPieces">Pièces</th>
                 <th>Description</th>
-                <th>Description Complète</th>
-                <th>Détails</th>
             </tr>
         </thead>
         <tbody id="tableBody">
@@ -57,24 +55,6 @@
             })
             .catch(error => console.error('Error:', error));
 
-        async function fetchDetailDescription(url) {
-            try {
-                const response = await fetch(url, {
-                    mode: 'no-cors',
-                    headers: {
-                        'Accept': 'text/html'
-                    }
-                });
-                const html = await response.text();
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const descriptionElement = doc.querySelector('p[_ngcontent-serverapp-c14]');
-                return descriptionElement ? descriptionElement.textContent.trim() : 'Description non disponible';
-            } catch (error) {
-                console.error('Error fetching description:', error);
-                return 'Erreur lors du chargement';
-            }
-        }
 
         function renderTable(data) {
             const tableBody = document.getElementById('tableBody');
@@ -101,9 +81,29 @@
                         currency: 'EUR'
                     }).format(prixM2) + '/m²' : 'N/A'}</td>
                     <td>${annonce.nbPieces} pièces</td>
-                    <td>${annonce.descriptionFr?.substring(0, 100)}...</td>
-                    <td><div class="loading"></div></td>
-                    <td><a href="${annonce.urlDetailAnnonceFr}" target="_blank">Lien</a></td>
+                    <td>${
+                        (() => {
+                            const searchWord = "plage";
+                            const description = annonce.descriptionFr || "";
+                            const index = description.toLowerCase().indexOf(searchWord);
+                            
+                            if (index !== -1) {
+                                const start = Math.max(0, index - 50);
+                                const end = Math.min(description.length, index + searchWord.length + 50);
+                                const substring = description.substring(start, end);
+                                
+                                // Find the word position in the substring
+                                const wordIndex = index - start;
+                                const before = substring.substring(0, wordIndex);
+                                const word = substring.substring(wordIndex, wordIndex + searchWord.length);
+                                const after = substring.substring(wordIndex + searchWord.length);
+                                
+                                return `${before}<span class="highlight">${word}</span>${after}...`;
+                            }
+                            
+                            return description.substring(0, 100) + "...";
+                        })()
+                    }</td>
                 `;
                 
                 tableBody.appendChild(row);

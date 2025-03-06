@@ -50,3 +50,8 @@ tr:not(thead tr):hover {
     margin-right: 10px;
     font-family: 'Google Sans', 'Roboto', sans-serif;
 } 
+
+.highlight {
+    background-color: yellow;
+    font-weight: bold;
+}
