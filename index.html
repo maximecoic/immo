@@ -516,6 +516,19 @@
                                 }).format(avgPrice)}
                             `);
 
+                            // Add click event to filter table
+                            marker.on('click', () => {
+                                // Update ville filter with the clicked location
+                                const villeFilter = document.getElementById('villeFilter');
+                                villeFilter.value = ville;
+                                
+                                // Apply filters to update the table
+                                applyFilters();
+                                
+                                // Open the popup
+                                marker.openPopup();
+                            });
+
                             // Add hover events
                             marker.on('mouseover', () => {
                                 // Highlight corresponding table rows
