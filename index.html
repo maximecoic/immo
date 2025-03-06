@@ -68,8 +68,23 @@
                 row.onclick = () => {
                     const isArcBrowser = navigator.userAgent.includes('Arc/');
                     if (isArcBrowser) {
-                        // Open in split view for Arc browser
-                        window.open(annonce.urlDetailAnnonceFr, '_blank', 'split');
+                        // Try different Arc-specific approaches
+                        try {
+                            // First attempt: using window.open with 'split' feature
+                            const splitWindow = window.open(annonce.urlDetailAnnonceFr, '_blank', 'split');
+                            
+                            // If that doesn't work, try triggering the keyboard shortcut programmatically
+                            if (!splitWindow) {
+                                const link = document.createElement('a');
+                                link.href = annonce.urlDetailAnnonceFr;
+                                link.target = '_blank';
+                                link.rel = 'noopener noreferrer';
+                                link.click();
+                            }
+                        } catch (e) {
+                            // Fallback to regular new tab if anything fails
+                            window.open(annonce.urlDetailAnnonceFr, '_blank');
+                        }
                     } else {
                         // Open in new tab for other browsers
                         window.open(annonce.urlDetailAnnonceFr, '_blank');
