@@ -429,25 +429,27 @@
             markers.forEach(marker => map.removeLayer(marker));
             markers = [];
 
-            // Group markers by postal code
-            const markersByPostalCode = {};
+            // Group markers by postal code and city
+            const markersByLocation = {};
             
             data.forEach(annonce => {
-                if (!markersByPostalCode[annonce.codePostal]) {
-                    markersByPostalCode[annonce.codePostal] = {
+                const locationKey = `${annonce.codePostal}-${annonce.communeNom}`;
+                if (!markersByLocation[locationKey]) {
+                    markersByLocation[locationKey] = {
                         count: 0,
                         lat: null,
                         lng: null,
                         items: []
                     };
                 }
-                markersByPostalCode[annonce.codePostal].count++;
-                markersByPostalCode[annonce.codePostal].items.push(annonce);
+                markersByLocation[locationKey].count++;
+                markersByLocation[locationKey].items.push(annonce);
             });
             
-            // Fetch coordinates for each postal code
-            Object.keys(markersByPostalCode).forEach(codePostal => {
-                fetch(`https://api-adresse.data.gouv.fr/search/?q=${codePostal}&type=municipality&limit=1`)
+            // Fetch coordinates for each location
+            Object.entries(markersByLocation).forEach(([locationKey, data]) => {
+                const [codePostal, ville] = locationKey.split('-');
+                fetch(`https://api-adresse.data.gouv.fr/search/?q=${ville} ${codePostal}&type=municipality&limit=1`)
                     .then(response => response.json())
                     .then(result => {
                         if (result.features && result.features.length > 0) {
@@ -455,13 +457,14 @@
                             const marker = L.marker([lat, lng]).addTo(map);
                             markers.push(marker);
                             
-                            const count = markersByPostalCode[codePostal].count;
-                            const items = markersByPostalCode[codePostal].items;
+                            const count = data.count;
+                            const items = data.items;
                             
                             const avgPrice = Math.round(items.reduce((sum, item) => sum + item.prixAffiche, 0) / count);
                             
                             marker.bindPopup(`
-                                <b>${items[0].communeNom}</b><br>
+                                <b>${ville}</b><br>
+                                <small>${codePostal}</small><br>
                                 ${count} annonce${count > 1 ? 's' : ''}<br>
                                 Prix moyen: ${new Intl.NumberFormat('fr-FR', {
                                     style: 'currency',
