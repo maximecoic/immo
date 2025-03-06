@@ -33,6 +33,7 @@
                 <th data-sort="surface">Surface</th>
                 <th data-sort="prixM2">Prix/m²</th>
                 <th data-sort="nbPieces">Pièces</th>
+                <th data-sort="dateCreation">Ancienneté</th>
                 <th>Description</th>
             </tr>
         </thead>
@@ -110,6 +111,13 @@
                         maximumFractionDigits: 0
                     }).format(prixM2) + '/m²' : 'N/A'}</td>
                     <td>${annonce.nbPieces} pièces</td>
+                    <td>${(() => {
+                        const creationDate = new Date(annonce.dateCreation);
+                        const today = new Date();
+                        const diffTime = Math.abs(today - creationDate);
+                        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                        return `${diffDays} jour${diffDays > 1 ? 's' : ''}`;
+                    })()}</td>
                     <td>${
                         (() => {
                             const searchWord = "plage";
