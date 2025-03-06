@@ -17,10 +17,10 @@
             <option value="MAI">Maison</option>
             <option value="APP">Appartement</option>
         </select>
-        <input type="number" id="prixMinFilter" placeholder="Prix minimum">
-        <input type="number" id="prixMaxFilter" placeholder="Prix maximum">
-        <input type="number" id="surfaceMinFilter" placeholder="Surface minimum">
-        <input type="number" id="surfaceMaxFilter" placeholder="Surface maximum">
+        <input type="text" id="prixMinFilter" placeholder="Prix minimum">
+        <input type="text" id="prixMaxFilter" placeholder="Prix maximum">
+        <input type="text" id="surfaceMinFilter" placeholder="Surface minimum">
+        <input type="text" id="surfaceMaxFilter" placeholder="Surface maximum">
     </div>
 
     <table id="annonceTable">
@@ -64,8 +64,8 @@
                 const row = document.createElement('tr');
                 const prixM2 = annonce.surface ? Math.round(annonce.prixAffiche / annonce.surface) : 'N/A';
                 
-                // Add click event to the row
-                row.onclick = () => window.open(annonce.urlDetailAnnonceFr, '_blank');
+                // Update click event
+                row.onclick = () => openDetailPanel(annonce.urlDetailAnnonceFr);
                 
                 row.innerHTML = `
                     <td>${annonce.typeBien === 'MAI' ? 'Maison' : 
@@ -250,6 +250,71 @@
 
             renderTable(filteredData);
         }
+
+        // Add these functions for panel management
+        function createDetailPanel() {
+            const panel = document.createElement('div');
+            panel.className = 'detail-panel';
+            
+            const closeButton = document.createElement('button');
+            closeButton.className = 'close-button';
+            closeButton.innerHTML = '×';
+            closeButton.onclick = closeDetailPanel;
+            
+            const iframe = document.createElement('iframe');
+            
+            panel.appendChild(closeButton);
+            panel.appendChild(iframe);
+            document.body.appendChild(panel);
+            
+            return panel;
+        }
+
+        function openDetailPanel(url) {
+            let panel = document.querySelector('.detail-panel');
+            if (!panel) {
+                panel = createDetailPanel();
+            }
+            
+            const iframe = panel.querySelector('iframe');
+            iframe.src = url;
+            
+            panel.classList.add('open');
+            document.querySelector('.content-wrapper').classList.add('shifted');
+        }
+
+        function closeDetailPanel() {
+            const panel = document.querySelector('.detail-panel');
+            if (panel) {
+                panel.classList.remove('open');
+                document.querySelector('.content-wrapper').classList.remove('shifted');
+                // Clear iframe src after animation
+                setTimeout(() => {
+                    panel.querySelector('iframe').src = '';
+                }, 300);
+            }
+        }
+
+        // Wrap existing content in a div
+        document.addEventListener('DOMContentLoaded', () => {
+            // Wrap all content except the detail panel in a content-wrapper
+            const wrapper = document.createElement('div');
+            wrapper.className = 'content-wrapper';
+            
+            // Move all body children into wrapper
+            while (document.body.firstChild) {
+                wrapper.appendChild(document.body.firstChild);
+            }
+            
+            document.body.appendChild(wrapper);
+        });
+
+        // Add event listener for escape key to close panel
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeDetailPanel();
+            }
+        });
     </script>
 </body>
 </html>
