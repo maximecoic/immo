@@ -73,12 +73,16 @@
                     <td>${annonce.communeNom}</td>
                     <td>${new Intl.NumberFormat('fr-FR', {
                         style: 'currency',
-                        currency: 'EUR'
+                        currency: 'EUR',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
                     }).format(annonce.prixAffiche)}</td>
                     <td>${annonce.surface} m²</td>
                     <td>${prixM2 !== 'N/A' ? new Intl.NumberFormat('fr-FR', {
                         style: 'currency',
-                        currency: 'EUR'
+                        currency: 'EUR',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
                     }).format(prixM2) + '/m²' : 'N/A'}</td>
                     <td>${annonce.nbPieces} pièces</td>
                     <td>${
@@ -133,6 +137,31 @@
                 });
             });
 
+            // Add click handler for Description header
+            document.querySelector('th:last-child').addEventListener('click', () => {
+                const searchWord = "plage";
+                
+                // Helper function to check if description contains "plage"
+                const hasPlage = (desc) => (desc || "").toLowerCase().includes(searchWord);
+                
+                // Helper function to get prix/m2
+                const getPrixM2 = (annonce) => annonce.surface ? Math.round(annonce.prixAffiche / annonce.surface) : Infinity;
+                
+                const sortedData = [...filteredData].sort((a, b) => {
+                    const aHasPlage = hasPlage(a.descriptionFr);
+                    const bHasPlage = hasPlage(b.descriptionFr);
+                    
+                    if (aHasPlage && !bHasPlage) return -1;
+                    if (!aHasPlage && bHasPlage) return 1;
+                    if (aHasPlage && bHasPlage) {
+                        return getPrixM2(a) - getPrixM2(b);
+                    }
+                    return 0;
+                });
+                
+                renderTable(sortedData);
+            });
+
             // Filtering
             const filters = {
                 ville: document.getElementById('villeFilter'),
@@ -142,6 +171,22 @@
                 surfaceMin: document.getElementById('surfaceMinFilter'),
                 surfaceMax: document.getElementById('surfaceMaxFilter')
             };
+
+            // Add formatting for price inputs
+            [filters.prixMin, filters.prixMax].forEach(input => {
+                input.addEventListener('input', (e) => {
+                    // Remove any non-digit characters
+                    let value = e.target.value.replace(/\D/g, '');
+                    
+                    // Add thousand separators
+                    if (value) {
+                        value = new Intl.NumberFormat('fr-FR').format(parseInt(value));
+                    }
+                    
+                    // Update the input value
+                    e.target.value = value;
+                });
+            });
 
             Object.values(filters).forEach(filter => {
                 filter.addEventListener('input', applyFilters);
@@ -168,8 +213,8 @@
             }
 
             // Prix filters
-            const prixMin = document.getElementById('prixMinFilter').value;
-            const prixMax = document.getElementById('prixMaxFilter').value;
+            const prixMin = document.getElementById('prixMinFilter').value.replace(/\D/g, '');
+            const prixMax = document.getElementById('prixMaxFilter').value.replace(/\D/g, '');
             if (prixMin) {
                 filteredData = filteredData.filter(annonce => 
                     annonce.prixAffiche >= parseFloat(prixMin)

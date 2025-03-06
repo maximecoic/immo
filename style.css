@@ -55,3 +55,22 @@ tr:not(thead tr):hover {
     background-color: yellow;
     font-weight: bold;
 }
+
+th:last-child {
+    cursor: pointer;
+}
+
+th:last-child:hover {
+    background-color: #ddd;
+}
+
+/* Remove up/down arrows from number inputs */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+
+input[type="number"] {
+    -moz-appearance: textfield; /* Firefox */
+}
