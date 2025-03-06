@@ -323,6 +323,7 @@
             }
 
             renderTable(filteredData);
+            updateMap(filteredData);
         }
 
         // Add these functions for panel management
@@ -410,12 +411,23 @@
             }
         });
 
+        let map;
+        let markers = [];
+
         function initMap(data) {
-            const map = L.map('map').setView([47.2184, -2.3510], 8); // Center on Bretagne
+            map = L.map('map').setView([47.2184, -2.3510], 8); // Center on Bretagne
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '© OpenStreetMap contributors'
             }).addTo(map);
+
+            updateMap(data);
+        }
+
+        function updateMap(data) {
+            // Clear existing markers
+            markers.forEach(marker => map.removeLayer(marker));
+            markers = [];
 
             // Group markers by postal code
             const markersByPostalCode = {};
@@ -441,6 +453,7 @@
                         if (result.features && result.features.length > 0) {
                             const [lng, lat] = result.features[0].geometry.coordinates;
                             const marker = L.marker([lat, lng]).addTo(map);
+                            markers.push(marker);
                             
                             const count = markersByPostalCode[codePostal].count;
                             const items = markersByPostalCode[codePostal].items;
