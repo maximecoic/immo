@@ -39,17 +39,19 @@ tr:not(thead tr):hover {
 
 .filters {
     margin: 20px 0;
-    display: flex;
+    display: grid;
+    grid-template-columns: repeat(2, 200px);
     gap: 10px;
-    flex-wrap: wrap;
+    justify-content: start;
 }
 
 .filters input, 
 .filters select {
     padding: 5px;
-    margin-right: 10px;
+    width: 100%;
+    box-sizing: border-box;
     font-family: 'Google Sans', 'Roboto', sans-serif;
-} 
+}
 
 .highlight {
     background-color: yellow;
