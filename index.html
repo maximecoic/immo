@@ -14,6 +14,7 @@
     <div class="header">
         <h1>Annonces Immobilières</h1>
         <span class="count">(<span id="rowCount">0</span> annonces)</span>
+        <button id="undoButton" class="undo-button" disabled>↩ Précédent</button>
     </div>
     
     <div class="filters-map-container">
@@ -57,6 +58,18 @@
         let sortDirection = 1;
         let currentSortColumn = '';
         let filteredData = [];
+        let filterHistory = [];
+        let currentFilterState = {
+            ville: '',
+            codePostal: '',
+            type: '',
+            prixMin: '',
+            prixMax: '',
+            surfaceMin: '',
+            surfaceMax: '',
+            terrainMin: '',
+            terrainMax: ''
+        };
 
         fetch('data.json')
             .then(response => response.json())
@@ -280,14 +293,71 @@
             });
         }
 
-        function applyFilters() {
+        function saveFilterState() {
+            const newState = { ...currentFilterState };
+            filterHistory.push(newState);
+            
+            // Keep only last 20 states
+            if (filterHistory.length > 20) {
+                filterHistory.shift();
+            }
+            
+            document.getElementById('undoButton').disabled = false;
+        }
+
+        function restorePreviousState() {
+            if (filterHistory.length > 0) {
+                const previousState = filterHistory.pop();
+                
+                // Update all filter inputs with previous values
+                Object.keys(previousState).forEach(key => {
+                    if (key === 'codePostal') {
+                        currentFilterState.codePostal = previousState[key];
+                        return;
+                    }
+                    const element = document.getElementById(key + 'Filter');
+                    if (element) {
+                        element.value = previousState[key];
+                    }
+                });
+                
+                // Update current state
+                currentFilterState = { ...previousState };
+                
+                // Apply filters
+                applyFilters(false); // Pass false to prevent saving this state
+                
+                // Disable button if no more history
+                document.getElementById('undoButton').disabled = filterHistory.length === 0;
+            }
+        }
+
+        function applyFilters(saveState = true) {
+            if (saveState) {
+                // Save current state before applying new filters
+                currentFilterState = {
+                    ville: document.getElementById('villeFilter').value,
+                    codePostal: '', // Will be updated by marker clicks
+                    type: document.getElementById('typeFilter').value,
+                    prixMin: document.getElementById('prixMinFilter').value,
+                    prixMax: document.getElementById('prixMaxFilter').value,
+                    surfaceMin: document.getElementById('surfaceMinFilter').value,
+                    surfaceMax: document.getElementById('surfaceMaxFilter').value,
+                    terrainMin: document.getElementById('terrainMinFilter').value,
+                    terrainMax: document.getElementById('terrainMaxFilter').value
+                };
+                saveFilterState();
+            }
+
             filteredData = [...annoncesData];
 
             // Ville filter
             const villeFilter = document.getElementById('villeFilter').value.toLowerCase();
-            if (villeFilter) {
+            const codePostalFilter = currentFilterState.codePostal;
+            if (villeFilter || codePostalFilter) {
                 filteredData = filteredData.filter(annonce => 
-                    annonce.communeNom.toLowerCase().includes(villeFilter)
+                    (villeFilter ? annonce.communeNom.toLowerCase().includes(villeFilter) : true) &&
+                    (codePostalFilter ? annonce.codePostal === codePostalFilter : true)
                 );
             }
 
@@ -521,9 +591,10 @@
                                 // Update ville filter with the clicked location
                                 const villeFilter = document.getElementById('villeFilter');
                                 villeFilter.value = ville;
+                                currentFilterState.codePostal = codePostal;
                                 
                                 // Apply filters to update the table
-                                applyFilters();
+                                applyFilters(true); // Save this state
                                 
                                 // Open the popup
                                 marker.openPopup();
@@ -548,6 +619,9 @@
                     });
             });
         }
+
+        // Add undo button event listener
+        document.getElementById('undoButton').addEventListener('click', restorePreviousState);
     </script>
 </body>
 </html>
