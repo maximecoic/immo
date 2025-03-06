@@ -125,3 +125,57 @@ input[type="number"] {
     height: 100%;
     border: none;
 }
+
+.panel-content {
+    margin-top: 40px;
+}
+
+.preview-image {
+    width: 100%;
+    height: 200px;
+    margin-bottom: 20px;
+    background: #f5f5f5;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+}
+
+.preview-image img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+}
+
+.no-image {
+    color: #999;
+    font-style: italic;
+}
+
+.preview-details {
+    margin-bottom: 20px;
+}
+
+.preview-details p {
+    margin: 10px 0;
+    line-height: 1.4;
+}
+
+.view-more-btn {
+    display: inline-block;
+    padding: 10px 20px;
+    background-color: #007bff;
+    color: white;
+    text-decoration: none;
+    border-radius: 4px;
+    margin-top: 20px;
+}
+
+.view-more-btn:hover {
+    background-color: #0056b3;
+}
+
+.detail-panel h2 {
+    margin-top: 0;
+    margin-bottom: 20px;
+}

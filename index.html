@@ -65,7 +65,7 @@
                 const prixM2 = annonce.surface ? Math.round(annonce.prixAffiche / annonce.surface) : 'N/A';
                 
                 // Update click event
-                row.onclick = () => openDetailPanel(annonce.urlDetailAnnonceFr);
+                row.onclick = () => openDetailPanel(annonce.urlDetailAnnonceFr, annonce);
                 
                 row.innerHTML = `
                     <td>${annonce.typeBien === 'MAI' ? 'Maison' : 
@@ -261,23 +261,44 @@
             closeButton.innerHTML = '×';
             closeButton.onclick = closeDetailPanel;
             
-            const iframe = document.createElement('iframe');
+            const content = document.createElement('div');
+            content.className = 'panel-content';
             
             panel.appendChild(closeButton);
-            panel.appendChild(iframe);
+            panel.appendChild(content);
             document.body.appendChild(panel);
             
             return panel;
         }
 
-        function openDetailPanel(url) {
+        function openDetailPanel(url, annonce) {
             let panel = document.querySelector('.detail-panel');
             if (!panel) {
                 panel = createDetailPanel();
             }
             
-            const iframe = panel.querySelector('iframe');
-            iframe.src = url;
+            const content = panel.querySelector('.panel-content');
+            content.innerHTML = `
+                <h2>${annonce.typeBien === 'MAI' ? 'Maison' : 'Appartement'}</h2>
+                <div class="preview-image">
+                    ${annonce.urlPhotoPrincipale ? 
+                      `<img src="${annonce.urlPhotoPrincipale}" alt="Photo principale">` : 
+                      '<div class="no-image">Pas de photo</div>'}
+                </div>
+                <div class="preview-details">
+                    <p><strong>Prix:</strong> ${new Intl.NumberFormat('fr-FR', {
+                        style: 'currency',
+                        currency: 'EUR',
+                        minimumFractionDigits: 0,
+                        maximumFractionDigits: 0
+                    }).format(annonce.prixAffiche)}</p>
+                    <p><strong>Surface:</strong> ${annonce.surface} m²</p>
+                    <p><strong>Ville:</strong> ${annonce.communeNom}</p>
+                    <p><strong>Pièces:</strong> ${annonce.nbPieces}</p>
+                    <p><strong>Description:</strong> ${annonce.descriptionFr}</p>
+                </div>
+                <a href="${url}" target="_blank" class="view-more-btn">Voir l'annonce complète</a>
+            `;
             
             panel.classList.add('open');
             document.querySelector('.content-wrapper').classList.add('shifted');
